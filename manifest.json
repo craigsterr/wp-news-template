@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Presets Manager",
+  "version": "1.0",
+  "description": "A Chrome extension to manage and apply presets for WordPress news templates.",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content-script.js"]
+    }
+  ]
+}
