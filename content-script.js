@@ -1,8 +1,28 @@
-// content_script.js
+// content-script.js
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "applyPreset") {
     const labels = request.labels || [];
+
+    if (!labels.length) {
+      // Optionally clear fields
+      const captionBox = document.getElementById(
+        "saga_featured_image_photographer"
+      );
+      if (captionBox) captionBox.value = "";
+
+      const hourField = document.getElementById("hh");
+      if (hourField) hourField.value = "";
+
+      const tagInput = document.getElementById("new-tag-post_tag");
+      if (tagInput) tagInput.value = "";
+
+      const iframe = document.querySelector("iframe#content_ifr");
+      if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+        iframe.contentDocument.body.innerHTML = "";
+      }
+      return;
+    }
 
     // Uncheck all checkboxes first
     document

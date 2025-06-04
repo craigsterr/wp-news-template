@@ -2,6 +2,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Default presets
   const defaultPresets = {
+    None: [],
     "All Defaults": [
       "ZZZ App Top Srories",
       "Community",
@@ -36,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       userPresets = result.userPresets || {};
       buildMenu();
       buildLabelCheckboxes();
-      applyPreset(menu.value || "All Defaults");
+      //   applyPreset(menu.value || "All Defaults");
     });
   }
 
@@ -47,6 +48,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Build dropdown menu options from presets + userPresets
   function buildMenu() {
+    // Add "None" option
+    const noneOption = document.createElement("option");
+    noneOption.value = "";
+    noneOption.textContent = "None";
+    menu.appendChild(noneOption);
+
     // Clear existing options
     menu.innerHTML = "";
     // Add default presets first
@@ -136,6 +143,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Send message to content script to apply preset, and update checkboxes in popup
   function applyPreset(presetName) {
+    if (!presetName) {
+      // "None" selected: clear all checkboxes and fields
+      buildLabelCheckboxes([]);
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (!tabs[0]) return;
+        chrome.tabs.sendMessage(tabs[0].id, {
+          action: "applyPreset",
+          presetName: "",
+          labels: [],
+        });
+      });
+      return;
+    }
+
     let labels = userPresets[presetName] || defaultPresets[presetName] || [];
     buildLabelCheckboxes(labels);
 
