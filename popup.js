@@ -9,8 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
       "Chambana Today",
       "Metro Services",
     ],
-    "News Only": ["Chambana Today", "Community"],
-    "Metro Services Only": ["Metro Services"],
   };
 
   // UI elements
@@ -22,10 +20,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // All possible labels to show as checkboxes
   const allLabels = [
-    "ZZZ App Top Srories",
-    "Community",
-    "Chambana Today",
-    "Metro Services",
+    // "ZZZ App Top Srories",
+    // "Community",
+    // "Chambana Today",
+    // "Metro Services",
   ];
 
   // User presets stored here
@@ -71,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
       menu.appendChild(option);
     }
     // Select first option if none selected
-    if (!menu.value) menu.value = "All Defaults";
+    // if (!menu.value) menu.value = "All Defaults";
   }
 
   // Build checkboxes for allLabels
@@ -107,72 +105,106 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Please enter a preset name.");
       return;
     }
-    const checkedLabels = Array.from(
-      labelsContainer.querySelectorAll("input[type='checkbox']:checked")
-    ).map((cb) => cb.value);
-
-    if (checkedLabels.length === 0) {
-      alert("Please select at least one label to save the preset.");
-      return;
-    }
 
     // Save preset to userPresets and storage
-    userPresets[name] = checkedLabels;
-    saveUserPresets();
-    buildMenu();
-    menu.value = name;
-    applyPreset(name);
-    presetNameInput.value = "";
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs[0]) return;
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: "getCheckedLabels" },
+        (response) => {
+          const checkedLabels =
+            response && response.checkedLabels ? response.checkedLabels : [];
+          const editorContent =
+            response && response.editorContent ? response.editorContent : "";
+          const tags = response && response.tags ? response.tags : "";
+          const photographer =
+            response && response.photographer ? response.photographer : "";
+
+          if (checkedLabels.length === 0) {
+            alert(
+              "Please select at least one label on the site to save the preset."
+            );
+            return;
+          }
+
+          userPresets[name] = {
+            labels: checkedLabels,
+            editorContent,
+            tags,
+            photographer,
+          };
+          saveUserPresets();
+          buildMenu();
+          menu.value = name;
+          applyPreset(name);
+          presetNameInput.value = "";
+        }
+      );
+    });
   });
 
-  // Delete preset button (only user presets can be deleted)
   deleteBtn.addEventListener("click", () => {
-    const selected = menu.value;
-    if (!selected || defaultPresets[selected]) {
-      alert("You can only delete user-created presets.");
+    const presetName = menu.value;
+
+    // Prevent deleting default presets or "None"
+    if (
+      !presetName ||
+      presetName === "None" ||
+      defaultPresets.hasOwnProperty(presetName)
+    ) {
+      alert("You can only delete your own custom presets.");
       return;
     }
-    if (confirm(`Delete preset "${selected}"?`)) {
-      delete userPresets[selected];
-      saveUserPresets();
-      buildMenu();
-      menu.value = "All Defaults";
-      applyPreset("All Defaults");
+
+    if (!userPresets.hasOwnProperty(presetName)) {
+      alert("Please select a user-created preset to delete.");
+      return;
     }
+
+    // Remove from userPresets and save
+    delete userPresets[presetName];
+    saveUserPresets();
+
+    // Rebuild menu and reset selection/UI
+    buildMenu();
+    menu.value = "None";
+    buildLabelCheckboxes([]);
+    applyPreset(""); // Clear fields on page
+
+    alert(`Preset "${presetName}" deleted.`);
   });
 
   // Send message to content script to apply preset, and update checkboxes in popup
   function applyPreset(presetName) {
-    if (!presetName) {
-      // "None" selected: clear all checkboxes and fields
-      buildLabelCheckboxes([]);
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        if (!tabs[0]) return;
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: "applyPreset",
-          presetName: "",
-          labels: [],
-        });
-      });
-      return;
+    let preset = userPresets[presetName] || defaultPresets[presetName];
+    let labels = [];
+    let editorContent = "";
+    let tags = "";
+    let photographer = "";
+
+    if (preset) {
+      if (Array.isArray(preset)) {
+        labels = preset;
+      } else {
+        labels = preset.labels || [];
+        editorContent = preset.editorContent || "";
+        tags = preset.tags || "";
+        photographer = preset.photographer || "";
+      }
     }
 
-    let labels = userPresets[presetName] || defaultPresets[presetName] || [];
-    buildLabelCheckboxes(labels);
-
-    console.log(labels);
-    // console.log(labelText);
-
-    // Send message to content script to apply preset to page
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (!tabs[0]) return;
       chrome.tabs.sendMessage(tabs[0].id, {
         action: "applyPreset",
         presetName,
         labels,
+        editorContent,
+        tags,
+        photographer,
       });
     });
   }
-
   loadPresets();
 });

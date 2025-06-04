@@ -1,6 +1,30 @@
 // content-script.js
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "getCheckedLabels") {
+    // Collect checked category labels from the page
+    const checkedLabels = Array.from(
+      document.querySelectorAll("label.selectit input[type='checkbox']:checked")
+    ).map((cb) => cb.parentElement.textContent.trim());
+
+    let editorContent = "";
+    const iframe = document.querySelector("iframe#content_ifr");
+    if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+      editorContent = iframe.contentDocument.body.innerHTML;
+    }
+
+    const tagInput = document.getElementById("new-tag-post_tag");
+    const photographerInput = document.getElementById(
+      "saga_featured_image_photographer"
+    );
+
+    const tags = tagInput ? tagInput.value : "";
+    const photographer = photographerInput ? photographerInput.value : "";
+
+    sendResponse({ checkedLabels, editorContent, tags, photographer });
+    return; // Important: return true if using async, but not needed here
+  }
+
   if (request.action === "applyPreset") {
     const labels = request.labels || [];
 
@@ -16,12 +40,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
       const tagInput = document.getElementById("new-tag-post_tag");
       if (tagInput) tagInput.value = "";
-
-      const iframe = document.querySelector("iframe#content_ifr");
-      if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
-        iframe.contentDocument.body.innerHTML = "";
-      }
-      return;
     }
 
     // Uncheck all checkboxes first
@@ -58,13 +76,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     const tagInput = document.getElementById("new-tag-post_tag");
     if (tagInput) tagInput.value = "Chambana Today, News";
 
+    // Set photographer caption if provided
+    if (request.photographer !== undefined) {
+      const captionBox = document.getElementById(
+        "saga_featured_image_photographer"
+      );
+      if (captionBox) captionBox.value = request.photographer;
+    }
+
+    // Set tags if provided
+    if (request.tags !== undefined) {
+      const tagInput = document.getElementById("new-tag-post_tag");
+      if (tagInput) tagInput.value = request.tags;
+    }
+
     // Inject content into TinyMCE iframe
-    const interval = setInterval(() => {
-      const iframe = document.querySelector("iframe#content_ifr");
-      if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
-        clearInterval(interval);
-        iframe.contentDocument.body.innerHTML = `<p>CHAMPAIGN, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`;
-      }
-    }, 300);
+
+    if (request.editorContent) {
+      const interval = setInterval(() => {
+        const iframe = document.querySelector("iframe#content_ifr");
+        if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+          clearInterval(interval);
+          iframe.contentDocument.body.innerHTML = request.editorContent;
+        }
+      }, 300);
+    } else if (request.presetName === "All Defaults") {
+      // Fallback for All Defaults if no editorContent provided
+      const interval = setInterval(() => {
+        const iframe = document.querySelector("iframe#content_ifr");
+        if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
+          clearInterval(interval);
+          iframe.contentDocument.body.innerHTML = `<p>CHAMPAIGN, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`;
+        }
+      }, 300);
+    }
   }
 });
