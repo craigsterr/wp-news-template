@@ -3,14 +3,55 @@ document.addEventListener("DOMContentLoaded", () => {
   // Default presets
   const defaultPresets = {
     None: [],
-    "All Defaults": [
-      "ZZZ App Top Srories",
-      "Community",
-      "Chambana Today",
-      "Metro Services",
-    ],
+    "Champaign Default": {
+      labels: [
+        "ZZZ App Top Srories",
+        "Community",
+        "Chambana Today",
+        "Metro Services",
+        "Saga Communications",
+      ],
+      photographer: "Metro Creative Connection", // <-- Default photographer
+      tags: "Chambana Today, News, Champaign,", // <-- Default tags
+      editorContent: `<p>CHAMPAIGN, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`,
+    },
+    "Danville Default": {
+      labels: [
+        "ZZZ App Top Srories",
+        "Community",
+        "Chambana Today",
+        "Metro Services",
+        "Saga Communications",
+      ],
+      photographer: "Metro Creative Connection", // <-- Default photographer
+      tags: "Chambana Today, News, Danville,", // <-- Default tags
+      editorContent: `<p>DANVILLE, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`,
+    },
+    "Chicago Default": {
+      labels: [
+        "ZZZ App Top Srories",
+        "Community",
+        "Chambana Today",
+        "Metro Services",
+        "Saga Communications",
+      ],
+      photographer: "Metro Creative Connection", // <-- Default photographer
+      tags: "Chambana Today, News, Chicago,", // <-- Default tags
+      editorContent: `<p>Chicago, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`,
+    },
+    "Springfield Default": {
+      labels: [
+        "ZZZ App Top Srories",
+        "IL State News",
+        "Chambana Today",
+        "Metro Services",
+        "Saga Communications",
+      ],
+      photographer: "Metro Creative Connection", // <-- Default photographer
+      tags: "Chambana Today, News, Springfield,", // <-- Default tags
+      editorContent: `<p>SPRINGFIELD, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`,
+    },
   };
-
   // UI elements
   const menu = document.getElementById("defaultPresetsMenu");
   const presetNameInput = document.getElementById("presetNameInput");
@@ -207,4 +248,24 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
   loadPresets();
+
+  document.getElementById("plus1Btn").addEventListener("click", () => {
+    incrementHour(1);
+  });
+  document.getElementById("plus2Btn").addEventListener("click", () => {
+    incrementHour(2);
+  });
+  document.getElementById("plus3Btn").addEventListener("click", () => {
+    incrementHour(3);
+  });
+
+  function incrementHour(amount) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (!tabs[0]) return;
+      chrome.tabs.sendMessage(tabs[0].id, {
+        action: "incrementHour",
+        amount,
+      });
+    });
+  }
 });

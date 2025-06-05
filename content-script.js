@@ -1,6 +1,17 @@
 // content-script.js
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  // ...existing code...
+
+  if (request.action === "incrementHour") {
+    const hourField = document.getElementById("hh");
+    if (hourField) {
+      let hourNum = parseInt(hourField.value, 10) || 0;
+      hourNum = (hourNum + request.amount) % 24;
+      hourField.value = String(hourNum).padStart(2, "0");
+    }
+  }
+
   if (request.action === "getCheckedLabels") {
     // Collect checked category labels from the page
     const checkedLabels = Array.from(
@@ -64,14 +75,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     );
     if (captionBox) captionBox.value = "Metro Creative Connection";
 
-    // Update hour +2
-    const hourField = document.getElementById("hh");
-    if (hourField) {
-      let hourNum = parseInt(hourField.value, 10);
-      hourNum = (hourNum + 2) % 24;
-      hourField.value = String(hourNum).padStart(2, "0");
-    }
-
     // Set default tags
     const tagInput = document.getElementById("new-tag-post_tag");
     if (tagInput) tagInput.value = "Chambana Today, News";
@@ -98,15 +101,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
           clearInterval(interval);
           iframe.contentDocument.body.innerHTML = request.editorContent;
-        }
-      }, 300);
-    } else if (request.presetName === "All Defaults") {
-      // Fallback for All Defaults if no editorContent provided
-      const interval = setInterval(() => {
-        const iframe = document.querySelector("iframe#content_ifr");
-        if (iframe && iframe.contentDocument && iframe.contentDocument.body) {
-          clearInterval(interval);
-          iframe.contentDocument.body.innerHTML = `<p>CHAMPAIGN, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`;
         }
       }, 300);
     }
