@@ -2,7 +2,7 @@
 
 **Presets Manager** is a Chrome extension that helps WordPress news editors quickly manage and apply groups of category checkboxes and related fields in the WordPress editor. Save time by creating, selecting, and deleting custom label presets for your publishing workflow.
 
-> **Note:** I initially made this extension for Chambana Today, but it can be used with any WordPress news site.
+> **Note:** I initially made this extension for Chambana Today, but it is intended to be used with any WordPress news site (still in development).
 
 ## Features
 
