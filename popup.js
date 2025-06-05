@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
       photographer: "Metro Creative Connection", // <-- Default photographer
       tags: "Chambana Today, News, Chicago,", // <-- Default tags
-      editorContent: `<p>Chicago, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`,
+      editorContent: `<p>CHICAGO, IL (<a href="https://chambanatoday.com" target="_blank" rel="noopener noreferrer">Chambana Today</a>) - </p>`,
     },
     "Springfield Default": {
       labels: [
